@@ -1,4 +1,4 @@
-import express, { NextFunction, Request, Response } from 'express';
+import express from 'express';
 import { Express } from 'express';
 import { serverConfig } from './config';
 import v1Router from './routers/v1/index.router';
@@ -10,9 +10,7 @@ import { connectDB } from './config/db';
 import { initRedis } from './config/redis';
 import { createExpressMiddleware } from '@trpc/server/adapters/express';
 import { trpcRouter } from './trpc';
-import { UrlService } from './services/url.service';
-import { UrlRepository } from './repositories/url.repository';
-import { CacheRepository } from './repositories/cache.repository';
+import { redirectUrl } from './controllers/url.controller';
 
 const app: Express = express();
 
@@ -25,26 +23,7 @@ app.use('/trpc', createExpressMiddleware({
     router: trpcRouter,
 }))
 
-app.get('/:shortUrl', async (req: Request, res: Response, next: NextFunction) => {
-    const { shortUrl } = req.params;
-
-    const urlService = new UrlService(new UrlRepository(), new CacheRepository());
-
-    const url = await urlService.getOriginalUrl(shortUrl);
-
-    if (!url) {
-        res.status(404).json({
-            success: false,
-            message: 'URL not found',
-        });
-
-        return;
-    }
-    
-    await urlService.incrementClicks(shortUrl);
-
-    res.redirect(url.originalUrl);
-})
+app.get('/:shortUrl', redirectUrl);
 
 app.use('/api/v1', v1Router);
 app.use('/api/v2', v2Router);
