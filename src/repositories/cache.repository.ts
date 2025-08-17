@@ -12,7 +12,7 @@ export class CacheRepository {
         return result;
     }
 
-    async getUrlMapping(shortUrl: string, originalUrl: string) {
+    async getUrlMapping(shortUrl: string) {
         const key = `url:${shortUrl}`;
         if(!redisClient.isOpen) {
             await redisClient.connect();
@@ -32,4 +32,13 @@ export class CacheRepository {
         return;
     }
 
+    async setUrlMapping(shortUrl: string, originalUrl: string) {
+        const key = `url:${shortUrl}`;
+        if(!redisClient.isOpen) {
+            await redisClient.connect();
+        }
+
+        await redisClient.set(key, originalUrl, { EX: 86400 });
+        return;
+    }
 }
